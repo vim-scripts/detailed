@@ -71,6 +71,7 @@ au Syntax ruby call s:ruby_syntax_and_highlights()
 au Syntax c    call s:c_syntax_and_highlights()
 au Syntax diff call s:diff_syntax_and_highlights()
 au Syntax vim  call s:vim_syntax_and_highlights()
+au Syntax go   call s:go_syntax_and_highlights()
 
 " Show detailed syntax stack
 nmap <Leader>dets :call <SID>SynStack()<CR>
@@ -365,6 +366,7 @@ let s:c = {
   \'green23': 23,
   \'green28': 28,
   \'green34': 34,
+  \'green37': 37,
   \'green71': 71,
   \'green76': 76,
   \'green84': 84,
@@ -394,6 +396,7 @@ let s:c = {
   \'purple129 (TODO: use this)': 129,
   \'purple131': 131,
   \'purple132': 132,
+  \'purple139': 139,
   \'purple134': 134,
   \'purple141 (TODO: use this)': 141,
   \'purple161 (TODO: use this)': 161,
@@ -465,8 +468,7 @@ endfun
 " For now, force darkness. If you're a big fan of white bg's, let me know, and
 " we can collaborate on a solution.
 set bg=dark
-hi Normal ctermfg=254 ctermbg=0
-call s:fgbg('Normal', 'gray254', 'basic8_black')
+call s:fgbg('Normal', 'gray254', 'gray232')
 
 " Basic/Default-like Palette {{{
 hi SpecialKey     term=bold ctermfg=81 guifg=Cyan
@@ -474,7 +476,6 @@ hi NonText        term=bold ctermfg=12 gui=bold guifg=Blue
 hi Directory      term=bold ctermfg=159 guifg=Cyan
 hi ErrorMsg       term=standout ctermfg=15 ctermbg=1 guifg=White guibg=Red
 hi IncSearch      term=reverse cterm=reverse gui=reverse
-hi Search         term=reverse ctermfg=0 ctermbg=11 guifg=Black guibg=Yellow
 hi MoreMsg        term=bold ctermfg=121 gui=bold guifg=SeaGreen
 hi ModeMsg        term=bold cterm=bold gui=bold
 hi LineNr         term=underline ctermfg=11 guifg=Yellow
@@ -505,7 +506,6 @@ hi TabLineSel     term=bold cterm=bold gui=bold
 hi TabLineFill    term=reverse cterm=reverse gui=reverse
 hi CursorColumn   term=reverse ctermbg=242 guibg=Grey40
 hi CursorLine     term=underline cterm=underline guibg=Grey40
-hi ColorColumn    term=reverse ctermfg=9 ctermbg=12 guifg=black guibg=lightgrey
 hi Constant       term=underline ctermfg=13 guifg=#ffa0a0
 hi Special        term=bold ctermfg=224 guifg=Orange
 hi Identifier     term=underline cterm=bold ctermfg=14 guifg=#40ffff
@@ -523,12 +523,12 @@ call s:fg('Comment', 'gray242') " In my books, comments should be quiet.
 " Generic links {{{
 hi link String          detailedString
 hi link Character       Constant
-hi link Number          Constant
-hi link Boolean         Constant
-hi link Float           Number
+hi link Number          detailedInteger
+hi link Boolean         detailedBoolean
+hi link Float           detailedFloat
 hi link Function        Identifier
 hi link Conditional     Statement
-hi link Repeat          Statement
+hi link Repeat          detailedRepeat
 hi link Label           Statement
 hi link Operator        Statement
 hi link Keyword         Statement
@@ -544,11 +544,6 @@ hi link SpecialChar     Special
 hi link Delimiter       Special
 hi link SpecialComment  Special
 hi link Debug           Special
-hi link mailQuoted1     Type
-hi link GPGWarning      WarningMsg
-hi link GPGError        ErrorMsg
-hi link GPGHighlightUnknownRecipient  ErrorMsg
-
 "}}}
 
 " s:detailed_colors — the good stuff {{{
@@ -557,6 +552,9 @@ fun! s:detailed_colors()
 
   call s:underline_fgbg('MatchParen', 'gray255', 'gray243')
 
+  " For :set colorcolumn=80
+  call s:fgbg('ColorColumn', 'gray254', 'gray233')
+
   "* Distinguish between each of TODO/FIXME/XXX
   call s:fgbg('detailedTodo', 'green76', 'gray238')
   call s:fgbg('detailedFixme', 'gray232', 'orange208')
@@ -564,6 +562,11 @@ fun! s:detailed_colors()
 
   call s:fgbg('Error', 'gray235', 'red196')
   call s:underline_fgbg('Search', 'gray254', 'gray235')
+
+  call s:fgbg('Folded', 'blue37', 'gray237')
+
+  " ^P (completion) menu
+  call s:fgbg('Pmenu', 'gray232', 'green28')
 
   " https://github.com/bitc/vim-bad-whitespace
   call s:fgbg('BadWhitespace', 'gray238', 'yellow58')
@@ -574,12 +577,15 @@ fun! s:detailed_colors()
   call s:fg('detailedModule', 'purple126')
   call s:fg('detailedDefine', 'green23')
   call s:fg('detailedInclude', 'purple53')
+  call s:fg('detailedDeclaration', 'yellow100') " Originally for go lang
+  call s:fg('detailedDeclType', 'green37') " Originally for go lang
 
   call s:bold_fg('detailedFunction', 'blue27')
 
   call s:fg('detailedInstanceVariable', 'blue75')
 
-  call s:fgbg('detailedString', 'red160', 'gray233')
+  call s:fgbg('detailedString', 'purple125', 'gray233')
+  call s:fgbg('detailedRawString', 'red160', 'gray233')
   call s:fg('detailedStringDelimiter', 'blue33')
   call s:fg('detailedInterpolationDelimiter', 'gray244')
 
@@ -597,6 +603,7 @@ fun! s:detailed_colors()
   call s:fg('detailedPseudoVariable', 'purple125')
   call s:fg('detailedInteger', 'purple134')
   call s:fg('detailedFloat', 'purple132')
+  call s:bold_fg('detailedImaginary', 'purple139')
 
   call s:fg('detailedBlockArgument', 'blue87')
   call s:fg('detailedSymbol', 'lavender104')
@@ -621,7 +628,7 @@ fun! s:detailed_colors()
   call s:bold_fg('detailedConditionalModifier', 'yellow148') " 'Yoda if'
   call s:fg('detailedConditionalExpression', 'light_yellow230')
   " (loops)
-  call s:fg('detailedRepeat', 'orange178')
+  call s:bold_fg('detailedRepeat', 'orange178')
   call s:bold_fg('detailedRepeatModifier', 'yellow149') " …while/until
   call s:fg('detailedRepeatExpression', 'orange222')
 
@@ -630,6 +637,7 @@ fun! s:detailed_colors()
   call s:fg('detailedDataDirective', 'purple201')
   call s:fg('detailedData', 'gray245')
 
+  call s:bold_fg('detailedDirective', 'green22')
 
   "* `fail`/`raise`/`exit` were yellow by default, but here a more warny orange.
   call s:fg('Exception', 'orange208')
@@ -643,7 +651,7 @@ fun! s:detailed_colors()
 
   " detailed.vim especialties:
   call s:fg('detailedInitialize', 'green84')
-  call s:bold_fg('detailedEncodingDirective', 'green22')
+  hi link detailedEncodingDirective detailedDirective
 
   hi link detailedExits Exception
 endfun
@@ -672,6 +680,19 @@ fun! s:c_syntax_and_highlights()
   hi link cStructure detailedClass
   hi link cStorageClass detailedClass
   hi link cOperator detailedDefine
+endfun
+
+fun! s:go_syntax_and_highlights()
+  
+  " hi link goBlock detailedBlock
+  hi link goDirective detailedDirective
+  hi link goDeclaration detailedDeclaration
+  hi link goDeclType detailedDeclType
+  hi link goConstants detailedBoolean
+  hi link goStatement detailedControl
+  hi link goRawString detailedRawString
+  hi link goImaginary detailedImaginary
+  hi link goSpaceError BadWhitespace
 endfun
 
 fun! s:vim_syntax_and_highlights()
