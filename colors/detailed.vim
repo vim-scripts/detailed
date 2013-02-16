@@ -393,7 +393,6 @@ let s:c = {
   \'purple125': 125,
   \'purple126': 126,
   \'purple127': 127,
-  \'purple129 (TODO: use this)': 129,
   \'purple131': 131,
   \'purple132': 132,
   \'purple139': 139,
@@ -451,8 +450,18 @@ fun! s:fgbg(group, fg, bg)
   exe 'hi '.a:group.' '.s:color_for(a:fg,'fg').' '.s:color_for(a:bg,'bg')
 endfun
 
+fun! s:bold(group)
+  exe 'hi '.a:group.' cterm=bold gui=bold'
+endfun
+
 fun! s:bold_fg(group, fg)
-  exe 'hi '.a:group.' '.s:color_for(a:fg,'fg').' cterm=bold gui=bold'
+  call s:fg(a:group, a:fg)
+  call s:bold(a:group)
+endfun
+
+fun! s:bold_fgbg(group, fg, bg)
+  call s:fgbg(a:group, a:fg, a:bg)
+  call s:bold(a:group)
 endfun
 
 fun! s:underline_fgbg(group, fg, bg)
@@ -485,27 +494,17 @@ hi StatusLine     term=bold,reverse cterm=bold,reverse gui=bold,reverse
 hi StatusLineNC   term=reverse cterm=reverse gui=reverse
 hi VertSplit      term=reverse cterm=reverse gui=reverse
 hi Title          term=bold ctermfg=225 gui=bold guifg=Magenta
-hi Visual         term=reverse ctermbg=242 guibg=DarkGrey
-hi VisualNOS      term=bold,underline cterm=bold,underline gui=bold,underline
 hi WarningMsg     term=standout ctermfg=224 guifg=Red
 hi WildMenu       term=standout ctermfg=0 ctermbg=11 guifg=Black guibg=Yellow
-hi Folded         term=standout ctermfg=14 ctermbg=242 guifg=Cyan guibg=DarkGrey
 hi FoldColumn     term=standout ctermfg=14 ctermbg=242 guifg=Cyan guibg=Grey
-hi SignColumn     term=standout ctermfg=14 ctermbg=242 guifg=Cyan guibg=Grey
-hi Conceal        ctermfg=7 ctermbg=242 guifg=LightGrey guibg=DarkGrey
 hi SpellBad       term=reverse ctermbg=9 gui=undercurl guisp=Red
 hi SpellCap       term=reverse ctermbg=12 gui=undercurl guisp=Blue
 hi SpellRare      term=reverse ctermbg=13 gui=undercurl guisp=Magenta
 hi SpellLocal     term=underline ctermbg=14 gui=undercurl guisp=Cyan
-hi Pmenu          ctermfg=0 ctermbg=13 guibg=Magenta
-hi PmenuSel       ctermfg=0 ctermbg=242 guibg=DarkGrey
-hi PmenuSbar      ctermbg=248 guibg=Grey
-hi PmenuThumb     ctermbg=15 guibg=White
 hi TabLine        term=underline cterm=underline ctermfg=15 ctermbg=242 gui=underline guibg=DarkGrey
 hi TabLineSel     term=bold cterm=bold gui=bold
 hi TabLineFill    term=reverse cterm=reverse gui=reverse
 hi CursorColumn   term=reverse ctermbg=242 guibg=Grey40
-hi CursorLine     term=underline cterm=underline guibg=Grey40
 hi Constant       term=underline ctermfg=13 guifg=#ffa0a0
 hi Special        term=bold ctermfg=224 guifg=Orange
 hi Identifier     term=underline cterm=bold ctermfg=14 guifg=#40ffff
@@ -552,8 +551,16 @@ fun! s:detailed_colors()
 
   call s:underline_fgbg('MatchParen', 'gray255', 'gray243')
 
+  " for :set cursorline
+  call s:bg('CursorLine', 'gray233')
+
+  hi CursorLine cterm=none " Get rid of the underline
+
   " For :set colorcolumn=80
   call s:fgbg('ColorColumn', 'gray254', 'gray233')
+
+  " For the Syntastic and quickfixsigns plugins:
+  call s:bg('SignColumn', 'gray233')
 
   "* Distinguish between each of TODO/FIXME/XXX
   call s:fgbg('detailedTodo', 'green76', 'gray238')
@@ -566,7 +573,17 @@ fun! s:detailed_colors()
   call s:fgbg('Folded', 'blue37', 'gray237')
 
   " ^P (completion) menu
-  call s:fgbg('Pmenu', 'gray232', 'green28')
+  call s:fgbg('Pmenu', 'gray232', 'gray246')
+  call s:fgbg('PmenuSel', 'gray232', 'green28')
+  call s:bg('PmenuSbar', 'gray234')
+  call s:bg('PmenuThumb', 'gray232')
+
+  " Visual selections
+  call s:bg('Visual', 'green22')
+  hi VisualNOS term=bold,underline cterm=bold,underline gui=bold,underline
+
+  " Tone this one down a bit. The color lowers contrast and is too obtrusive.
+  call s:bg('Conceal', 'gray235')
 
   " https://github.com/bitc/vim-bad-whitespace
   call s:fgbg('BadWhitespace', 'gray238', 'yellow58')
@@ -585,6 +602,8 @@ fun! s:detailed_colors()
   call s:fg('detailedInstanceVariable', 'blue75')
 
   call s:fgbg('detailedString', 'purple125', 'gray233')
+  call s:fgbg('detailedInterpolatedString', 'purple126', 'gray233')
+  call s:bold_fgbg('detailedExecutedString', 'green34', 'purple53')
   call s:fgbg('detailedRawString', 'red160', 'gray233')
   call s:fg('detailedStringDelimiter', 'blue33')
   call s:fg('detailedInterpolationDelimiter', 'gray244')
@@ -683,7 +702,7 @@ fun! s:c_syntax_and_highlights()
 endfun
 
 fun! s:go_syntax_and_highlights()
-  
+
   " hi link goBlock detailedBlock
   hi link goDirective detailedDirective
   hi link goDeclaration detailedDeclaration
@@ -704,9 +723,6 @@ endfun
 fun! s:detailed_syntax_addtions()
   call s:detailed_colors()
 
-  " Steal this back from the too-generic 'rubyControl':
-  syn match detailedExits "\<\%(exit!\|\%(abort\|at_exit\|exit\|fork\|trap\)\>[?!]\@!\)"
-
   " TODO - somehow make the detail{Todo,Fixme,Xxx} work for non-ruby langs.
   " E.g., shTodo overrides them, so it will need something like:
   " syn match   rubyComment   "#.*" contains=rubySharpBang,rubySpaceError,
@@ -718,6 +734,14 @@ endfun
 call s:detailed_syntax_addtions() " Hrm, can this not be done with aucmd?
 
 fun! s:ruby_syntax_and_highlights()
+  " Steal this back from the too-generic 'rubyControl':
+  syn match detailedExits "\<\%(exit!\|\%(abort\|at_exit\|exit\|fork\|trap\)\>[?!]\@!\)"
+
+  " TODO: also handle %(…), etc
+  syn region detailedInterpolatedString matchgroup=detailedInterpolatedStringDelimiter start="\"" end="\"" skip="\\\\\|\\\"" contains=@rubyStringSpecial,@Spell fold
+  " TODO: Also, %x(). Anything else?
+  syn region detailedExecutedString matchgroup=detailedExecutedStringDelimiter start="`" end="`"  skip="\\\\\|\\`"  contains=@rubyStringSpecial fold
+
   " The default syntax/ruby.vim gets this way wrong (only does 2 chars and is
   " transparent):
   syn match rubyBlockArgument "&[_[:lower:]][_[:alnum:]]*" contains=NONE display
