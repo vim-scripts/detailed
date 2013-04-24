@@ -71,6 +71,7 @@ au Syntax ruby call s:ruby_syntax_and_highlights()
 au Syntax c    call s:c_syntax_and_highlights()
 au Syntax diff call s:diff_syntax_and_highlights()
 au Syntax vim  call s:vim_syntax_and_highlights()
+au Syntax javascript call s:javsacript_syntax_and_highlights()
 au Syntax go   call s:go_syntax_and_highlights()
 
 " Show detailed syntax stack
@@ -720,6 +721,12 @@ fun! s:vim_syntax_and_highlights()
   "hi link vimFuncBody detailedDefine
 endfun
 
+fun! s:javsacript_syntax_and_highlights()
+  hi link javascriptFunction detailedDefine
+  hi link javascriptIdentifier Type
+  hi link javascriptRailsFunction detailedInstanceVariable
+endfun
+
 fun! s:detailed_syntax_addtions()
   call s:detailed_colors()
 
@@ -871,10 +878,10 @@ fun! s:fatpacked_rainbow_parens()
         \ 'DarkOrange3', 'FireBrick',
         \ ]
 
+  " From Pharo Smalltalk:
+  " Black, Green, Purple, Maroon, LightGreen, Orange, Red, Blue
   let ctermfgs = exists('g:rainbow_ctermfgs')? g:rainbow_ctermfgs : [
-        \ 'darkgray', 'Darkblue', 'darkmagenta',
-        \ 'darkcyan', 'darkred', 'darkgreen',
-        \ ]
+        \ '19', '238', '22', '56', '52', '72', '166', '88' ]
 
   let max = has('gui_running')? len(guifgs) : len(ctermfgs)
 

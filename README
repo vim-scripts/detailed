@@ -1,5 +1,6 @@
 This is a mirror of http://www.vim.org/scripts/script.php?script_id=4297
 
+
 Source repo: http://github.com/rking/vim-detailed
 
 So many 256-color schemes merely shift the palette around, displaying only 8
@@ -62,15 +63,13 @@ Or, from within vim:
 - C: 12 details detailed.
 - Go: 10 details detailed.
 - Diff: 10 details detailed.
+- Javascript: 4 details detailed.
 - Vim: 4 details detailed.
 
-Open issues
-
-  11: Smart Here-docs 1
-  10: Sync Rainbow-Parens to Pharo
-   9: Detail Python [actual-user-request] 4
-   7: Handle t_Co != 256
-   6: Pygments Companion
-   3: Distinguish Foo and Bar of "class Foo < Bar"
-   2: ` " ' distinction [actual-user-request] 3
-
+# rking/vim-detailed open issues
+  13  More troubleshooting help? 3
+  11  Smart Here-docs 1
+   9  Detail Python [actual-user-request] 4
+   7  Handle t_Co != 256
+   6  Pygments Companion
+   3  Distinguish Foo and Bar of "class Foo < Bar"
